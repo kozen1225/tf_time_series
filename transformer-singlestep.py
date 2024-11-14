@@ -17,7 +17,7 @@ np.random.seed(0)
 #tgt = torch.rand((20, 32, 512)) # (T,N,E)
 #out = transformer_model(src, tgt)
 
-input_window = 100 # number of input steps
+input_window = 200 # number of input steps
 output_window = 1 # number of prediction steps, in this model its fixed to one
 block_len = input_window + output_window # for one input-output pair
 batch_size = 10
@@ -110,22 +110,25 @@ def create_inout_sequences(input_data, input_window ,output_window):
 
 def get_data():
     # construct a littel toy dataset
-    time        = np.arange(0, 400, 0.1)    
-    amplitude   = np.sin(time) + np.sin(time * 0.05) + \
-                  np.sin(time * 0.12) * np.random.normal(-0.2, 0.2, len(time))
+    #time= np.arange(0, 400, 0.1)    
+    #amplitude   = np.sin(time) + np.sin(time * 0.05) + \
+    #              np.sin(time * 0.12) * np.random.normal(-0.2, 0.2, len(time))
 
     from sklearn.preprocessing import MinMaxScaler
     
     #loading weather data from a file
-    #from pandas import read_csv
-    #series = read_csv('daily-min-temperatures.csv', header=0, index_col=0, parse_dates=True, squeeze=True)
+    from pandas import read_csv
+    series = read_csv('daily-min-temperatures.csv', header=0, index_col=0, parse_dates=True).squeeze()
     
     # looks like normalizing input values curtial for the model
     scaler = MinMaxScaler(feature_range=(-1, 1)) 
-    #amplitude = scaler.fit_transform(series.to_numpy().reshape(-1, 1)).reshape(-1)
-    amplitude = scaler.fit_transform(amplitude.reshape(-1, 1)).reshape(-1)
+    amplitude = scaler.fit_transform(series.to_numpy().reshape(-1, 1)).reshape(-1)
+    #amplitude = scaler.fit_transform(amplitude.reshape(-1, 1)).reshape(-1)
 
-    sampels = int(len(time) * train_size) # use a parameter to control training size
+    # use a parameter to control training size
+    #sampels = int(len(time) * train_size) 
+    sampels = int(len(amplitude) * train_size) 
+
     train_data = amplitude[:sampels]
     test_data = amplitude[sampels:]
 
@@ -234,7 +237,7 @@ def predict_future(eval_model, data_source,steps):
     pyplot.grid(True, which='both')
     pyplot.axhline(y=0, color='k')
     pyplot.savefig('graph/transformer-future%d.png'%steps)
-    pyplot.show()
+    #pyplot.show()
     pyplot.close()
         
 
@@ -260,7 +263,7 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1, gamma=0.95)
 
 best_val_loss = float("inf")
-epochs = 10 # The number of epochs
+epochs = 100 # The number of epochs
 best_model = None
 
 for epoch in range(1, epochs + 1):

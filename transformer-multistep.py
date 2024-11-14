@@ -26,7 +26,8 @@ calculate_loss_over_all_values = False
 
 input_window = 100
 output_window = 5
-batch_size = 10 # batch size
+batch_size = 10
+train_size = 0.7
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class PositionalEncoding(nn.Module):
@@ -99,7 +100,7 @@ def get_data():
     amplitude   = np.sin(time) + np.sin(time*0.05) +np.sin(time*0.12) *np.random.normal(-0.2, 0.2, len(time))
     
     #from pandas import read_csv
-    #series = read_csv('daily-min-temperatures.csv', header=0, index_col=0, parse_dates=True, squeeze=True)
+    #series = read_csv('daily-min-temperatures.csv', header=0, index_col=0, parse_dates=True).squeeze()
     
     from sklearn.preprocessing import MinMaxScaler
     scaler = MinMaxScaler(feature_range=(-1, 1)) 
@@ -107,7 +108,7 @@ def get_data():
     amplitude = scaler.fit_transform(amplitude.reshape(-1, 1)).reshape(-1)
     
     
-    sampels = 2800
+    sampels = int(len(amplitude)*train_size)
     train_data = amplitude[:sampels]
     test_data = amplitude[sampels:]
 
@@ -198,9 +199,6 @@ def plot_and_loss(eval_model, data_source,epoch):
 
 def predict_future(eval_model, data_source,steps):
     eval_model.eval() 
-    total_loss = 0.
-    test_result = torch.Tensor(0)    
-    truth = torch.Tensor(0)
     _ , data = get_batch(data_source, 0,1)
     with torch.no_grad():
         for i in range(0, steps,1):
@@ -219,8 +217,7 @@ def predict_future(eval_model, data_source,steps):
     pyplot.savefig('graph/transformer-future%d.png'%steps)
     pyplot.close()
         
-# entweder ist hier ein fehler im loss oder in der train methode, aber die ergebnisse sind unterschiedlich 
-# auch zu denen der predict_future
+
 def evaluate(eval_model, data_source):
     eval_model.eval() # Turn on the evaluation mode
     total_loss = 0.
@@ -251,7 +248,6 @@ best_model = None
 for epoch in range(1, epochs + 1):
     epoch_start_time = time.time()
     train(train_data)
-    
     
     if(epoch % 10 is 0):
         val_loss = plot_and_loss(model, val_data,epoch)
