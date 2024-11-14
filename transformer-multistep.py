@@ -187,7 +187,7 @@ def plot_and_loss(eval_model, data_source,epoch):
     len(test_result)
 
     pyplot.plot(test_result,color="red")
-    pyplot.plot(truth[:500],color="blue")
+    pyplot.plot(truth,color="blue")
     pyplot.plot(test_result-truth,color="green")
     pyplot.grid(True, which='both')
     pyplot.axhline(y=0, color='k')
